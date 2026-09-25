@@ -1,0 +1,12 @@
+Image,Predicted Food,Confidence (%),Category
+apple_test.jpg,Donut,20.82,Dessert
+banana_test.jpg,Banana,73.29,Fruit
+carrot_test.jpg,Chocolate Cake,38.42,Dessert
+cupcake_test.jpg,Cupcake,96.16,Dessert
+donut_test.jpg,Chocolate Cake,53.89,Dessert
+hamburger_test.jpg,Donut,45.09,Dessert
+hot_dog_test.jpg,Hot Dog,88.2,Fast Food
+ice_cream_test.jpg,Ice Cream,41.81,Dessert
+peanut_test.jpg,French Fries,45.91,Fast Food
+pizza_test.jpg,Pizza,99.24,Fast Food
+strawberry_test.jpg,Chocolate Cake,26.54,Dessert

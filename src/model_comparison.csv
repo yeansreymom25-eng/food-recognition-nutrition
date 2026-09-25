@@ -1,0 +1,4 @@
+Model,Test Accuracy (%)
+Original MobileNetV2,92.28
+Fine-Tuned MobileNetV2,95.18
+Improved MobileNetV2,95.5
