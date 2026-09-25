@@ -5,68 +5,58 @@ from torch.utils.data import DataLoader
 
 
 # --------------------------------------------------
-# Image preprocessing
+# Image preprocessing and augmentation
 # --------------------------------------------------
 
-def get_transforms():
-    """
-    Create image transformations for training,
-    validation, and testing.
-    """
+train_transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomRotation(10),
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
+])
 
-    train_transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomRotation(10),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
-        )
-    ])
 
-    val_test_transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
-        )
-    ])
-
-    return train_transform, val_test_transform
+val_test_transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
+])
 
 
 # --------------------------------------------------
 # Load datasets
 # --------------------------------------------------
 
-def load_datasets(data_dir):
-    """
-    Load train, validation, and test datasets.
-
-    Expected structure:
-
-    data_dir/
-        train/
-        validation/
-        test/
-    """
-
-    train_transform, val_test_transform = get_transforms()
+def load_datasets(data_path):
 
     train_dataset = datasets.ImageFolder(
-        os.path.join(data_dir, "train"),
+        os.path.join(
+            data_path,
+            "train"
+        ),
         transform=train_transform
     )
 
     validation_dataset = datasets.ImageFolder(
-        os.path.join(data_dir, "validation"),
+        os.path.join(
+            data_path,
+            "validation"
+        ),
         transform=val_test_transform
     )
 
     test_dataset = datasets.ImageFolder(
-        os.path.join(data_dir, "test"),
+        os.path.join(
+            data_path,
+            "test"
+        ),
         transform=val_test_transform
     )
 
@@ -82,37 +72,37 @@ def load_datasets(data_dir):
 # --------------------------------------------------
 
 def create_dataloaders(
-    data_dir,
-    batch_size=32,
-    num_workers=2
+    data_path,
+    batch_size=32
 ):
-    """
-    Create PyTorch DataLoaders.
-    """
 
-    train_dataset, validation_dataset, test_dataset = (
-        load_datasets(data_dir)
+    (
+        train_dataset,
+        validation_dataset,
+        test_dataset
+    ) = load_datasets(
+        data_path
     )
 
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
         shuffle=True,
-        num_workers=num_workers
+        num_workers=2
     )
 
     validation_loader = DataLoader(
         validation_dataset,
         batch_size=batch_size,
         shuffle=False,
-        num_workers=num_workers
+        num_workers=2
     )
 
     test_loader = DataLoader(
         test_dataset,
         batch_size=batch_size,
         shuffle=False,
-        num_workers=num_workers
+        num_workers=2
     )
 
     return (
@@ -121,30 +111,3 @@ def create_dataloaders(
         test_loader,
         train_dataset.classes
     )
-
-
-# --------------------------------------------------
-# Dataset information
-# --------------------------------------------------
-
-def print_dataset_info(data_dir):
-    """
-    Display dataset sizes and class names.
-    """
-
-    train_dataset, validation_dataset, test_dataset = (
-        load_datasets(data_dir)
-    )
-
-    print("Training images:", len(train_dataset))
-    print("Validation images:", len(validation_dataset))
-    print("Test images:", len(test_dataset))
-    print("Number of classes:", len(train_dataset.classes))
-
-    print("\nClasses:")
-    for class_name in train_dataset.classes:
-        print("-", class_name)
-
-# get_transforms() handles resize, augmentation and normalization.
-# load_datasets() loads train, validation and test folders using ImageFolder.
-# create_dataloaders() creates batches for PyTorch.
