@@ -1,0 +1,12 @@
+Image,Actual Food,Model Result,Confidence (%),Category,Status
+apple_test.jpg,Apple,Apple,77.61,Fruit,Correct
+banana_test.jpg,Banana,Banana,84.37,Fruit,Correct
+carrot_test.jpg,Carrot,Carrot,50.92,Vegetable,Correct
+cupcake_test.jpg,Cupcake,Cupcake,97.42,Dessert,Correct
+donut_test.jpg,Donut,Donut,54.14,Dessert,Correct
+hamburger_test.jpg,Hamburger,Hamburger,62.49,Fast Food,Correct
+hot_dog_test.jpg,Hot Dog,Hot Dog,93.49,Fast Food,Correct
+ice_cream_test.jpg,Ice Cream,Uncertain,38.39,-,Uncertain
+peanut_test.jpg,Peanut,Peanut,66.17,Nuts,Correct
+pizza_test.jpg,Pizza,Pizza,99.43,Fast Food,Correct
+strawberry_test.jpg,Strawberry,Strawberry,98.58,Fruit,Correct

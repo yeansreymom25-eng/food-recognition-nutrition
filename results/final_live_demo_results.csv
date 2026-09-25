@@ -1,0 +1,6 @@
+Image,Predicted Food,Confidence (%),Category,Portion (g),Calories (kcal),Protein (g),Carbohydrates (g),Fat (g)
+brocoli.jpg,Uncertain Prediction,35.98,-,200.0,-,-,-,-
+cake.jpg,Uncertain Prediction,30.02,-,150.0,-,-,-,-
+donut (1).jpg,Donut,98.15,Dessert,500.0,2260.0,24.5,256.5,125.0
+hambuger (1).jpg,Hamburger,99.49,Fast Food,2000.0,5000.0,260.0,600.0,180.0
+stawberry (1).jpg,Strawberry,96.16,Fruit,400.0,128.0,2.8,30.8,1.2
