@@ -1,0 +1,248 @@
+import os
+import torch
+import pandas as pd
+
+from PIL import Image
+from torchvision import transforms
+
+from model import create_mobilenetv2
+
+
+# --------------------------------------------------
+# Project settings
+# --------------------------------------------------
+
+MODEL_PATH = os.path.join(
+    "model",
+    "best_improved_mobilenetv2.pth"
+)
+
+NUTRITION_PATH = os.path.join(
+    "nutrition",
+    "food_nutrition.csv"
+)
+
+NUM_CLASSES = 20
+CONFIDENCE_THRESHOLD = 50
+
+
+# --------------------------------------------------
+# Food classes
+# --------------------------------------------------
+
+class_names = [
+    "almond",
+    "apple",
+    "banana",
+    "broccoli",
+    "carrot",
+    "cashew",
+    "chocolate_cake",
+    "cucumber",
+    "cupcake",
+    "donut",
+    "french_fries",
+    "hamburger",
+    "hot_dog",
+    "ice_cream",
+    "orange",
+    "peanut",
+    "pizza",
+    "strawberry",
+    "tomato",
+    "walnut"
+]
+
+
+# --------------------------------------------------
+# Device
+# --------------------------------------------------
+
+device = torch.device(
+    "cuda" if torch.cuda.is_available() else "cpu"
+)
+
+
+# --------------------------------------------------
+# Load final improved model
+# --------------------------------------------------
+
+model = create_mobilenetv2(
+    num_classes=NUM_CLASSES,
+    pretrained=False,
+    freeze_backbone=False
+)
+
+model.load_state_dict(
+    torch.load(
+        MODEL_PATH,
+        map_location=device
+    )
+)
+
+model = model.to(device)
+model.eval()
+
+
+# --------------------------------------------------
+# Image preprocessing
+# --------------------------------------------------
+
+prediction_transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
+])
+
+
+# --------------------------------------------------
+# Load nutrition database
+# --------------------------------------------------
+
+nutrition_df = pd.read_csv(
+    NUTRITION_PATH
+)
+
+nutrition_dict = (
+    nutrition_df
+    .set_index("food")
+    .to_dict("index")
+)
+
+
+# --------------------------------------------------
+# Predict food
+# --------------------------------------------------
+
+def predict_food(
+    image_path,
+    portion_grams=100
+):
+
+    # Load image
+    original_image = Image.open(
+        image_path
+    ).convert("RGB")
+
+    # Prepare image
+    image_tensor = prediction_transform(
+        original_image
+    )
+
+    image_tensor = (
+        image_tensor
+        .unsqueeze(0)
+        .to(device)
+    )
+
+    # Prediction
+    with torch.no_grad():
+
+        output = model(
+            image_tensor
+        )
+
+        probabilities = torch.softmax(
+            output,
+            dim=1
+        )
+
+        confidence, predicted_label = torch.max(
+            probabilities,
+            1
+        )
+
+    predicted_food = class_names[
+        predicted_label.item()
+    ]
+
+    confidence_percent = (
+        confidence.item() * 100
+    )
+
+
+    # --------------------------------------------------
+    # Low confidence
+    # --------------------------------------------------
+
+    if confidence_percent < CONFIDENCE_THRESHOLD:
+
+        return {
+            "predicted_food": "Uncertain Prediction",
+            "confidence": round(
+                confidence_percent,
+                2
+            ),
+            "category": "-",
+            "portion_grams": portion_grams,
+            "calories": "-",
+            "protein": "-",
+            "carbohydrates": "-",
+            "fat": "-"
+        }
+
+
+    # --------------------------------------------------
+    # Confident prediction
+    # --------------------------------------------------
+
+    nutrition = nutrition_dict[
+        predicted_food
+    ]
+
+    ratio = portion_grams / 100
+
+    calories = round(
+        nutrition["calories_kcal"]
+        * ratio,
+        2
+    )
+
+    protein = round(
+        nutrition["protein_g"]
+        * ratio,
+        2
+    )
+
+    carbs = round(
+        nutrition["carbs_g"]
+        * ratio,
+        2
+    )
+
+    fat = round(
+        nutrition["fat_g"]
+        * ratio,
+        2
+    )
+
+
+    return {
+        "predicted_food": (
+            predicted_food
+            .replace("_", " ")
+            .title()
+        ),
+
+        "confidence": round(
+            confidence_percent,
+            2
+        ),
+
+        "category": nutrition[
+            "category"
+        ],
+
+        "portion_grams": portion_grams,
+
+        "calories": calories,
+
+        "protein": protein,
+
+        "carbohydrates": carbs,
+
+        "fat": fat
+    }
