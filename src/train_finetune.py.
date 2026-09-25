@@ -1,0 +1,313 @@
+import os
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+from data import create_dataloaders
+from model import create_mobilenetv2
+
+
+# --------------------------------------------------
+# Project settings
+# --------------------------------------------------
+
+DATA_PATH = "split_data"
+MODEL_DIR = "model"
+
+NUM_CLASSES = 20
+BATCH_SIZE = 32
+FINE_TUNE_EPOCHS = 3
+LEARNING_RATE = 0.0001
+
+
+# --------------------------------------------------
+# Device
+# --------------------------------------------------
+
+device = torch.device(
+    "cuda" if torch.cuda.is_available() else "cpu"
+)
+
+print("Using device:", device)
+
+
+# --------------------------------------------------
+# Load dataset
+# --------------------------------------------------
+
+(
+    train_loader,
+    validation_loader,
+    test_loader,
+    class_names
+) = create_dataloaders(
+    DATA_PATH,
+    batch_size=BATCH_SIZE
+)
+
+
+# --------------------------------------------------
+# Create MobileNetV2 structure
+# --------------------------------------------------
+
+model = create_mobilenetv2(
+    num_classes=NUM_CLASSES,
+    pretrained=False,
+    freeze_backbone=True
+)
+
+
+# --------------------------------------------------
+# Load previous best model
+# --------------------------------------------------
+
+original_model_path = os.path.join(
+    MODEL_DIR,
+    "best_mobilenetv2.pth"
+)
+
+model.load_state_dict(
+    torch.load(
+        original_model_path,
+        map_location=device
+    )
+)
+
+model = model.to(device)
+
+print("Previous best MobileNetV2 model loaded!")
+
+
+# --------------------------------------------------
+# Freeze all feature layers
+# --------------------------------------------------
+
+for param in model.features.parameters():
+    param.requires_grad = False
+
+
+# --------------------------------------------------
+# Unfreeze last 3 feature blocks
+# --------------------------------------------------
+
+for layer in model.features[-3:]:
+
+    for param in layer.parameters():
+        param.requires_grad = True
+
+print(
+    "Last 3 MobileNetV2 feature blocks "
+    "are ready for fine-tuning."
+)
+
+
+# --------------------------------------------------
+# Loss function
+# --------------------------------------------------
+
+criterion = nn.CrossEntropyLoss()
+
+
+# --------------------------------------------------
+# Fine-tuning optimizer
+# --------------------------------------------------
+
+optimizer = optim.Adam(
+    filter(
+        lambda p: p.requires_grad,
+        model.parameters()
+    ),
+    lr=LEARNING_RATE
+)
+
+print("Fine-tuning optimizer ready!")
+print("Learning rate:", LEARNING_RATE)
+
+
+# --------------------------------------------------
+# Fine-tuning history
+# --------------------------------------------------
+
+best_fine_val_accuracy = 0.0
+
+fine_train_accuracies = []
+fine_val_accuracies = []
+
+
+# --------------------------------------------------
+# Fine-tune for 3 epochs
+# --------------------------------------------------
+
+for epoch in range(FINE_TUNE_EPOCHS):
+
+    # ==============================================
+    # TRAINING
+    # ==============================================
+
+    model.train()
+
+    correct = 0
+    total = 0
+    running_loss = 0.0
+
+    for images, labels in train_loader:
+
+        images = images.to(device)
+        labels = labels.to(device)
+
+        optimizer.zero_grad()
+
+        outputs = model(images)
+
+        loss = criterion(
+            outputs,
+            labels
+        )
+
+        loss.backward()
+        optimizer.step()
+
+        running_loss += loss.item()
+
+        _, predicted = torch.max(
+            outputs,
+            1
+        )
+
+        total += labels.size(0)
+
+        correct += (
+            predicted == labels
+        ).sum().item()
+
+    train_loss = (
+        running_loss /
+        len(train_loader)
+    )
+
+    train_accuracy = (
+        100 * correct / total
+    )
+
+
+    # ==============================================
+    # VALIDATION
+    # ==============================================
+
+    model.eval()
+
+    val_correct = 0
+    val_total = 0
+    val_running_loss = 0.0
+
+    with torch.no_grad():
+
+        for images, labels in validation_loader:
+
+            images = images.to(device)
+            labels = labels.to(device)
+
+            outputs = model(images)
+
+            loss = criterion(
+                outputs,
+                labels
+            )
+
+            val_running_loss += loss.item()
+
+            _, predicted = torch.max(
+                outputs,
+                1
+            )
+
+            val_total += labels.size(0)
+
+            val_correct += (
+                predicted == labels
+            ).sum().item()
+
+    val_loss = (
+        val_running_loss /
+        len(validation_loader)
+    )
+
+    val_accuracy = (
+        100 *
+        val_correct /
+        val_total
+    )
+
+
+    # ==============================================
+    # SAVE HISTORY
+    # ==============================================
+
+    fine_train_accuracies.append(
+        train_accuracy
+    )
+
+    fine_val_accuracies.append(
+        val_accuracy
+    )
+
+
+    # ==============================================
+    # PRINT RESULT
+    # ==============================================
+
+    print(
+        f"\nFine-Tune Epoch "
+        f"{epoch + 1}/{FINE_TUNE_EPOCHS}"
+    )
+
+    print(
+        f"Train Loss: "
+        f"{train_loss:.4f} | "
+        f"Train Accuracy: "
+        f"{train_accuracy:.2f}%"
+    )
+
+    print(
+        f"Validation Loss: "
+        f"{val_loss:.4f} | "
+        f"Validation Accuracy: "
+        f"{val_accuracy:.2f}%"
+    )
+
+
+    # ==============================================
+    # SAVE BEST FINE-TUNED MODEL
+    # ==============================================
+
+    if val_accuracy > best_fine_val_accuracy:
+
+        best_fine_val_accuracy = (
+            val_accuracy
+        )
+
+        torch.save(
+            model.state_dict(),
+            os.path.join(
+                MODEL_DIR,
+                "best_finetuned_mobilenetv2.pth"
+            )
+        )
+
+        print(
+            "Best fine-tuned model saved!"
+        )
+
+    print("-" * 50)
+
+
+# --------------------------------------------------
+# Finish
+# --------------------------------------------------
+
+print("\nFine-tuning finished!")
+
+print(
+    f"Best Fine-Tuned Validation Accuracy: "
+    f"{best_fine_val_accuracy:.2f}%"
+)
