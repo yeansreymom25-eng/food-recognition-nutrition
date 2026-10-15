@@ -437,25 +437,6 @@ https://docs.pytorch.org/vision/main/models/generated/torchvision.models.mobilen
 
 ---
 
-## 🤖 AI Use Disclosure
-
-**Tool Used:** ChatGPT
-
-**Scope of Use**
-
-- Project planning
-- Deep learning concept explanation
-- PyTorch and Google Colab debugging
-- GitHub organization
-- Documentation support
-
-**Verification**
-
-All project code was run and tested by the project author.  
-The results reported in this repository come from the actual project experiments.
-
----
-
 <div align="center">
 
 ### 🎯 Final Model
