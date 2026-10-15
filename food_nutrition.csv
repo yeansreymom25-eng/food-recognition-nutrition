@@ -1,0 +1,21 @@
+food,category,calories_kcal,protein_g,carbs_g,fat_g
+almond,Nuts,579,21.2,21.6,49.9
+apple,Fruit,52,0.3,13.8,0.2
+banana,Fruit,89,1.1,22.8,0.3
+broccoli,Vegetable,34,2.8,6.6,0.4
+carrot,Vegetable,41,0.9,9.6,0.2
+cashew,Nuts,553,18.2,30.2,43.9
+chocolate_cake,Dessert,371,5.3,53.4,15.7
+cucumber,Vegetable,15,0.7,3.6,0.1
+cupcake,Dessert,305,3.4,50.7,10.0
+donut,Dessert,452,4.9,51.3,25.0
+french_fries,Fast Food,312,3.4,41.4,15.0
+hamburger,Fast Food,250,13.0,30.0,9.0
+hot_dog,Fast Food,290,10.3,4.2,26.0
+ice_cream,Dessert,207,3.5,23.6,11.0
+orange,Fruit,47,0.9,11.8,0.1
+peanut,Nuts,567,25.8,16.1,49.2
+pizza,Fast Food,266,11.0,33.0,10.0
+strawberry,Fruit,32,0.7,7.7,0.3
+tomato,Vegetable,18,0.9,3.9,0.2
+walnut,Nuts,654,15.2,13.7,65.2
